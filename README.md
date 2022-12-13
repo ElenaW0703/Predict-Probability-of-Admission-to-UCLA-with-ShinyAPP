@@ -1,4 +1,4 @@
-# Predicting the probability of admission to UCLA via regression methods
+# Predicting the Probability of Admission to UCLA via Regression Methods
 
 <!-- badges: start -->
   [![R-CMD-check](https://github.com/Sta523-Fa21/final_proj_skr523/workflows/R-CMD-check/badge.svg)](https://github.com/Sta523-Fa21/final_proj_skr523/actions)
@@ -40,7 +40,7 @@ library(skrFinal)
 * Sijie Chen (sijie.chen@duke.edu) [@SijieChen](https://github.com/sjchenn)
 * Shuo Wang (shuo.wang717@duke.edu) [@ShuoWang](https://github.com/star7878)
 * Tianhao Li (tianhao.li@duke.edu) [@TianhaoLi](https://github.com/Tianhao-Li)
-* Xiaoyu Wang (elena.wang@duke.edu) [@XiaoyuWang](https://github.com/ElenaW0528)
+* Xiaoyu Wang (elena.wang@duke.edu) [@XiaoyuWang](https://github.com/ElenaW0703)
 
 ## Version History
 
