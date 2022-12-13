@@ -1,0 +1,187 @@
+---
+title: "FinalWriteUp"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{FinalWriteUp}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+```
+
+```{r setup,message=FALSE}
+library(skrFinal)
+library(magick)
+library(ggplot2)
+data(gradApplication)
+```
+
+# Introduction
+
+This project involves constructing a Shiny frontend, and training regression models based on data set from Kaggle, details on the data set arein overview section.
+
+The primary purpose for our project is to help international students making more appropriate choices during their master application process. Many students feel difficult on choosing the appropriate graduate school to apply for, either because they are not aware of university rankings or would have been misinformed by seniors and fellow applicants. This can result in students missing out on opportunities and lead to a complete wastage of resources. To help those students by taking advantage of existing dataset, we fit the admission rate data set, which contains 500 students' performance on some important features, on three common linear regression methods to form a robust and precise evaluation of their profile, and provide them with a reasonable chance of admission. 
+
+We downloaded the UCLA Graduate Admission data set from kaggle (https://www.kaggle.com/mohansacharya/graduate-admissions), fed it into exploratory data analysis and modeled training and comparison pipeline, then we used the trained model to make prediction given new information entered by users from our shiny App.
+
+## Dataset overview
+
+The dataset we used is called "Graduate Admission 2" which was created for prediction of Graduate Admissions from an Indian student perspective. The parameters in this dataset include:
+
+1.GRE Scores ( out of 340 )
+
+2.TOEFL Scores ( out of 120 )
+
+3.University Rating ( out of 5 )
+
+4.Statement of Purpose and Letter of Recommendation Strength ( out of 5 )
+
+5.Undergraduate GPA ( out of 10 )
+
+6.Research Experience ( either 0 or 1 )
+
+7.Chance of Admit ( ranging from 0.00 to 1.00 )
+
+All the data in this dataset has been normalized. This dataset has some limitation since it only includes Indian students' data. Future improvement will be discussed in the conclusion part. The first 5 row of the gradApplication dataset is provided below. 
+
+```{r}
+head(gradApplication)
+```
+
+# Package Implementation
+Our package is implemented into 3 main parts, the first part involves EDA together with plots for our dataset gradApplication, which will be loaded into memory whenever the package is used; the second part is the training and model comparison of our regression models; finally, we made a shiny front end for users to easily use the end-product of our model training pipeline to predict their chance of getting into UCLA's graduate program. 
+
+## Exploratory data analysis and plot_cor() & plot_density() Function
+
+For EDA part, the probability of admission has relatively high correlation between all predictors. Rate of admission is proportional to performance in all predictors, such as, people who has higher probability of admission tends to have the high GRE and TOEFL scores. 
+Consequentially, we should try ordinary least square regression, ridge regression, and lasso regression to predict the admission rate. 
+
+In plot_cor() function, we used ggpairs to do the pairwise correlation. 
+
+In plot_density() function, the predictor of chance of admission is grouped by three levels: low possibility, middle possibility, and high possibility in data_level data set. Additionally, the density plots of all variables are constructed according to three level of admission rate. 
+
+```{r, fig.height=5, fig.width=5,fig.align = 'center'}
+skrFinal::plot_cor()
+```
+
+```{r, fig.height=5, fig.width=5,fig.align = 'center'}
+skrFinal::plot_density()
+```
+
+
+## Model Training and Comparison
+In this part of the package, we developed a series of helper function to help us model the the chance one can get into UCLA graduate program. There are some internal methods that can only be accessed by the library's other functions, this includes:   
+
+* MSE(y, yhat)
+* split_data(data=gradApplication, train_p=0.8, seed=0)
+* train_model(traindata, method="ols")
+* logit(x)
+* logistic(x)
+
+There are also exported functions, this includes:
+
+* model_comparison(data=gradApplication, train_p=0.8, seed=0, 
+    methods=c("ols", "ridge", "lasso"))
+* predict_skr(model, newx, method)
+* run_shiny()
+
+For anyone who needs to know more detail on the functions, simply do use command ?function_name to look up documentation. The logit and logistic function's mathematical formula is provided in equation 1 and 2.
+
+\begin{equation}
+\text{logit(x)} = log(\frac{x}{1-x}) \\
+\text{logistic(x)} = \frac{e^x}{1+e^x}
+\end{equation}
+
+The general usage of our package's exported functions follows the code below. "best_method" is the best method selected by model_comparison, to get the best model, user can do best_model$best_model. All methods parameters are not case sensitive, so, for example, ridge, Ridge, RIDGE will not cause confusion
+```{r}
+best_model = model_comparison(data=gradApplication, train_p=0.8, seed=0,  
+                              methods=c("ols", "ridge", "lasso"))
+best_model$best_method
+```
+
+### Details of model_comparison Function
+The model_comparison function intakes data, train_p, seed parameters and method parameters. Using the first three parameters, we will utilize the internal method split_data to split the data into training and testing set. Then we will train models base on the inputted methods from the method parameter. The model_comparison function will loop through the input method and call train_model() function to train a model. train_model() function currently only support linear regression, Ridge regression, and LASSO regression, the best parameter for the penalized linear models are chosen via 5 fold cross validation implemented in the train_model() function. For each trained model, we will predict test y-value and evaluate the model using the MSE() internal function. 
+*Note that to ensure the predicted values are within [0,1], we used the logit function to convert our y-value, then during prediction, we used the logistic function to transform the predicted values back*. 
+
+The following histograms visualize the logit transformed y value compared with original y value. This transformation not only mapped our y into a more normal shaped distribution, it also puts the transformed y in a balanced range, which is more suitable for regressions. 
+
+```{r, echo=FALSE, fig.height=3, fig.width=5,fig.align = 'center'}
+logit = function(x) {
+  return (log(x/(1-x)))
+}
+par(mfrow=c(1,2))
+hist(gradApplication$Chance.of.Admit, xlab="Chance.of.Admit", main="")
+hist(logit(gradApplication$Chance.of.Admit), xlab="logit(Chance.of.Admit)", main="")
+```
+
+Our final model suggests a lasso regression with $\lambda = 0.063$. The coefficients of the best model is provided below.
+```{r, echo=FALSE}
+model = best_model$best_model
+model$beta
+```
+
+We can also predict with our best model using our predict_skr() wrapper function like the following 
+```{r}
+personaldata = as.data.frame(t((c(320,100,5.8,3,4,5,1))))
+colnames(personaldata) = c('GRE.Score','TOEFL.Score','University.Rating','SOP',
+                           'LOR','CGPA','Research')
+predict_skr(best_model$best_model, personaldata, best_model$best_method)
+```
+
+Unit tests are used to test the exported functions. 
+
+## Shiny Frontend
+
+### Shiny User Guide
+
+The section will introduce our shiny frontend. We build an interactive app mainly functioning on  predicting international student users' chance of admission into UCLA graduate level programs. The user will need to type run_shiny() in the console to run our shiny app. We will start our introduction on the app with the input sidebar panel. 
+
+Inside of the sidebar panel, users have the options to input their standard scores which includes GRE score, TOEFL score and current GPA, where GRE ranges between 260 and 340, TOEFL scores between 1 to 120, and GPA between value 0 to 10. In addition to standard scores, users can provide information on their education background below, including their rating on undergraduate university, rating for the quality of their statement of purpose, and rating for the strength of their recommendation letters. All of ratings range from 1 to 5, where 1 stands for not very strong to 5 for very strong. Furthermore, user can also indicate whether they have had research experience by checking the box. After providing all of the information, users can click on “Let’s See” button and our app will calculate user's probability of successfully admitted into UCLA master programs.
+
+After user clicked on the button, our app will generate the admitted rate and represents it as a text output. Together with the text output, we will have a radar plot for visualizing important criteria needed for high admitted rate. The radar plot include three different color lines. The red line indicates the user's input data. The rest two color lines are generated from grad Application data set. We have filtered samples in terms of admitted rate higher than 70%. The dark gray line represents the median score under seven components for samples that have relatively higher chance being admitted, while the green line represents the max values.  
+
+***Example***
+
+The following example is only for demonstration purpose:
+The sidebar panel now have a GRE score equal to 320, TOEFL score equals to 100, and current GPA 8.0. The user rated three stars for his undergraduate university, and five stars for strength of statement of purpose and strength of recommendation letter. The user checked the box which implies that he has had research experience before. 
+
+```{r}
+side <- magick::image_read('Graph/SidebarPanel.png')
+magick::image_scale(side, "750")
+```
+
+
+Our app calculated user's probability for getting into UCLA is around 67%.
+The radar plot visualization provides more insight on the difference between user and people who tends to have higher admitted rate. Our example is less competitive on his TOFEL score, undergraduate university rate, and GPA. He outperforms others in strength of recommendation letter, strength of personal statement. He met the median under GRE score and research experience. If our example wants to improve his competitiveness for the application, he may wants to improve his TOEFL score and GPA. 
+
+```{r}
+main <- magick::image_read('Graph/MainPanel.png')
+magick::image_scale(main, "750")
+```
+
+
+### Shiny Implemntation 
+We designed an input sidebar for collecting required data from the user which includes GRE score, TOEFL score, undergraduates GPA, undergraduate university rating, strength of recommendation letter, strength of personal statement, and research experience. Inside of the server, we reconstruct the input data into a data frame with the intention that we can use data inside the predict function. Inside of our reactive element named rate, we applied our own built predict function with the best output model, best output model method and input data together to generate reasonable value from 0.0 to 1.0. 
+
+On the main panel, we have highlighted the rate using a different color, and the text output will change according to different range of rate. We selected samples who had probability of admission above 70% and calculated their maximum and medium on all seven criteria as a comparison with input information. We believe radar plot is most informative and suitable here because the plot can straightforwardly demonstrate user's advantages or disadvantages during application process; while many other plots like histogram can only convey part of the differences. 
+
+# Concluding Remarks
+
+In this project, we completed loading datasets, training models, making predictions, and displaying the result. Although we only used three basic regression methods (OLS,Ridge Regression,LASSO), the test mean squared error were quite low, which suggests linear method is  suitable for this particular setting. 
+
+Nevertheless, our model have some limitations.
+
+First of all, the generalization ability. The dataset we used only contains Indian students' data, which limits the generalization ability of the model. Some future improvement can involve incorporating other international students' data and scaling some parameters like GPA to a 0.0 to 4.0 range. As for the generalization ability across universities, since different universities have a wide range for admission preference, it is important to obtain other universities' admission data to ensure the model functioning on prediction for rate entering other universities.
+
+Second, the prediction accuracy. Although the test accuracy on this dataset was quite good, if we want the model to be more generalized and precise, we could consider adding other parameters including working experience, numbers of volunteer services, etc. We need to be aware that adding parameter imply that we will need a larger amount of data as well as considering data collection is expensive. If the model can be modified to be applicable to most international student, we believe that this will not be a problem.
+
+Last of all, the interpretability of our model is concerning. Generally speaking, students who are interested not only in their current admission probability but also their future chance of being admitted if they have time to make their profile more outstanding. If we successfully realize the data set with more features, serious collinearity can exist between features. We may encounter features with practical meanings but involve interactions with other variables, which implies that we may need to create features manually using linear combinations or perform principal component analysis to induce some regularization that can lead to better performance on prediction purposes but lose some interpretability.  
+
+#Reference
+
+* Mohan S Acharya, Asfia Armaan, Aneeta S Antony : A Comparison of Regression Models for Prediction of Graduate Admissions, IEEE International Conference on Computational Intelligence in Data Science 2019
