@@ -1,0 +1,40 @@
+Package: skrFinal
+Title: What the Package Does (One Line, Title Case)
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Sijie", "Chen", , "sijie.chen@duke.edu", role = c("aut", "cre")),
+    person("Tianhao", "Li", , "tianhao.li@duke.edu", role = c("aut")),
+    person("Shuo", "Wang", , "shuo.wang717@duke.edu", role = c("aut")),
+    person("Xiaoyu", "Wang", , "elena.wang@duke.edu", role = c("aut")),
+    person("Haoming", "Yang", , "haoming.yang@duke.edu", role = c("aut"))
+    )
+Description: This packacge offers a statistical learning way of predicting
+    student's admission probability to UCLA graduate program using various of 
+    regression technique. Our data is provided in Kaggle as Graduate Admission 2.
+License: MIT + file LICENSE
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
+Depends: 
+    R (>= 2.10)
+LazyData: true
+Imports: 
+    gridExtra,
+    ggplot2,
+    GGally,
+    caret,
+    glmnet,
+    dplyr,
+    shiny,
+    shinyjs,
+    ECharts2Shiny,
+    ShinyRatingInput,
+    magrittr
+Remotes: https://github.com/stefanwilhelm/ShinyRatingInput
+Suggests: 
+    rmarkdown,
+    magick,
+    knitr,
+    testthat (>= 3.0.0)
+VignetteBuilder: knitr
+Config/testthat/edition: 3
