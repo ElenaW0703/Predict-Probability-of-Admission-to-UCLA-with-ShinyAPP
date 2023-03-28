@@ -4,7 +4,8 @@
   [![R-CMD-check](https://github.com/Sta523-Fa21/final_proj_skr523/workflows/R-CMD-check/badge.svg)](https://github.com/Sta523-Fa21/final_proj_skr523/actions)
   <!-- badges: end -->
   
-This project intends to provide a Shiny APP, which is based on a dataset from kaggle and 3 regression methods, to enable users to predict their chance of being admitted to UCLA. 
+This project intends to provide a Shiny APP, which is based on a dataset from kaggle and 3 regression methods, to enable users to predict their chance of being admitted to UCLA. \
+Final writeup could be found in *vignettes*
 
 ## Description
 
@@ -36,11 +37,11 @@ library(skrFinal)
 
 ## Authors
 
+* Xiaoyu Wang (elena.wang@duke.edu) [@XiaoyuWang](https://github.com/ElenaW0703)
 * Haoming Yang (haoming.yang@duke.edu) [@HaomingYang](https://github.com/imkeithyang)
 * Sijie Chen (sijie.chen@duke.edu) [@SijieChen](https://github.com/sjchenn)
 * Shuo Wang (shuo.wang717@duke.edu) [@ShuoWang](https://github.com/star7878)
 * Tianhao Li (tianhao.li@duke.edu) [@TianhaoLi](https://github.com/Tianhao-Li)
-* Xiaoyu Wang (elena.wang@duke.edu) [@XiaoyuWang](https://github.com/ElenaW0703)
 
 ## Version History
 
